@@ -7,34 +7,31 @@ import {mustache} from "./mustache";
 
 export let DOM: Document;
 
-export function bootstrap<T extends ModuleInterface>(module: Type<T>, dom?: Document): any[] {
+export function bootstrap<T extends ModuleInterface>(module: Type<T>, dom?: Document) {
     const moduleInstance: T = new module();
 
     if (dom) {
         DOM = dom;
     }
 
-    let instances = [];
 
     if (moduleInstance.bootstrap) {
-        instances.push(bootstrapComponents(moduleInstance.bootstrap, true));
+        bootstrapComponents(moduleInstance.bootstrap, true);
     }
 
     if (moduleInstance.declarations) {
-        moduleInstance.declarations.forEach(declaration => instances.push(bootstrapComponents(declaration)));
+        moduleInstance.declarations.forEach(declaration => bootstrapComponents(declaration));
     }
-
-    return instances;
 }
 
-export function bootstrapComponents<T extends Partial<ComponentInterface>>(component: Type<T>, bootstrapComponent: boolean = false): T {
+export function bootstrapComponents<T extends Partial<ComponentInterface>>(component: Type<T>, bootstrapComponent: boolean = false) {
     const args: any[] = Reflect.getMetadata('design:paramtypes', component);
     const depArgs: any[] = args.map(dep => {
         if (DependencyInjectionContainer.hasDependency(dep)) {
             return DependencyInjectionContainer.getDependency(dep);
         }
 
-        return DependencyInjectionContainer.addDependency(dep);
+        throw Error(`Error: ${dep.name} is not registered in providers`);
     })
 
     const componentInstance: T = new component(...depArgs);
@@ -55,6 +52,4 @@ export function bootstrapComponents<T extends Partial<ComponentInterface>>(compo
             componentInstance.kdAfterViewInit();
         }
     }
-
-    return componentInstance;
 }

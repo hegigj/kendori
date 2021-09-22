@@ -18,7 +18,7 @@ export class DependencyInjectionContainer {
             );
     }
 
-    public static getDependency(instance: Type<any>): Type<any> | undefined {
+    public static getDependency(instance: Type<any>): any | undefined {
         return this.instancesOfDependencies
             .find(
                 dependency =>

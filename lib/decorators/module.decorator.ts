@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import {ModuleInterface} from "../models/module.interface";
 import {GLOBAL_INJECTABLE, INJECTABLE, SPECIFIC_INJECTABLE} from "./injectable.decorator";
+import {DependencyInjectionContainer} from "../models/dependency-injection.container";
 
 export function KdModule(config: ModuleInterface) {
     return (module: Function) => {
@@ -29,18 +30,14 @@ export function KdModule(config: ModuleInterface) {
                   Reflect.hasMetadata(GLOBAL_INJECTABLE, provider) ||
                   Reflect.hasMetadata(SPECIFIC_INJECTABLE, provider)
               ) {
-                  if (Reflect.hasMetadata(INJECTABLE, provider)) {
-                      if (!Reflect.getMetadata(INJECTABLE, provider)) {
-                          throw Error(`Error: ${Reflect.getMetadata('design:type', provider)} is not injected as a dependency`);
-                      }
-                  } else if (Reflect.hasMetadata(GLOBAL_INJECTABLE, provider)) {
-                      if (!Reflect.getMetadata(GLOBAL_INJECTABLE, provider)) {
-                          throw Error(`Error: ${Reflect.getMetadata('design:type', provider)} is not injected as a dependency in the root of this app`);
-                      }
+                  if (!Reflect.getMetadata(INJECTABLE, provider)) {
+                      throw Error(`Error: ${Reflect.getMetadata('design:type', provider)} is not injected as a dependency`);
+                  } else if (!Reflect.getMetadata(GLOBAL_INJECTABLE, provider)) {
+                      throw Error(`Error: ${Reflect.getMetadata('design:type', provider)} is not injected as a dependency in the root of this app`);
+                  } else if (Reflect.getMetadata(SPECIFIC_INJECTABLE, provider) !== name) {
+                      throw Error(`Error: ${Reflect.getMetadata('design:type', provider)} is injected as a dependency of ${Reflect.getMetadata(SPECIFIC_INJECTABLE, provider)}, but is required also in ${name}`);
                   } else {
-                      if (Reflect.getMetadata(SPECIFIC_INJECTABLE, provider) !== name) {
-                          throw Error(`Error: ${Reflect.getMetadata('design:type', provider)} is injected as a dependency of ${Reflect.getMetadata(SPECIFIC_INJECTABLE, provider)}, but is required also in ${name}`);
-                      }
+                      DependencyInjectionContainer.addDependency(provider);
                   }
               } else {
                   throw Error(`Error: ${Reflect.getMetadata('design:type', provider)} is not injected as a dependency`);
